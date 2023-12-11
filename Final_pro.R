@@ -18,6 +18,17 @@ merged_df$wage_income_comparison <- merged_df$median_household_income/ merged_df
  
 unemployment_df <- aggregate(cbind(median_household_income, share_unemployed_seasonal) ~ state, data = merged_df, FUN = mean)
 
+merged_df$share_white <- 1 - merged_df$share_non_white
+
+merged_df$state <- tolower(merged_df$state)
+
+merged_df$state <- tolower(merged_df$state)
+
+# Create a new column with abbreviated state names
+merged_df$state_abbr <- state.abb[match(merged_df$state, tolower(state.name))]
+
+merged_df$state_abbr[is.na(merged_df$state_abbr)] <- "D.C"
+
 
 #this is the file that were going to do all of our data wrangling on 
 
