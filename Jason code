@@ -1,73 +1,175 @@
-# Run the application
-shinyApp(ui, server)
+
 library(shiny)
+library(ggplot2)
+library(urbnmapr)
+source("Final_pro.R")  # Commented out if not needed
 library(shinydashboard)
 library(plotly)
-source("github1.R")
 
-
-
-# Sample data (replace this with your actual data)
-merged_df <- data.frame(
+mer_df <- data.frame(
   state_abbr = state.abb,
   median_household_income = rnorm(50, mean = 50000, sd = 10000),
   gini_index = rnorm(50, mean = 0.4, sd = 0.1),
-  share_population_with_high_school_degree = runif(50, min = 60, max = 90)
+  share_population_with_high_school_degree = runif(50, min = 60, max = 90),
+  hate_crimes_per_100k_splc = rnorm(50, mean = 5, sd = 2),
+  share_population_in_metro_areas = runif(50, min = 40, max = 80)
 )
 
-# Define UI
+final_plot <- ggplot(mer_df, aes(x = median_household_income, y = (share_population_with_high_school_degree * 100), label = state_abbr)) +
+  geom_point(color = "darkblue", size = 3, alpha = 0.7) +
+  geom_text(vjust = -0.5, hjust = 1, size = 3, color = "black") +
+  labs(title = "Median Household Income vs. Share of Population with High School Degree",
+       x = "Median Household Income",
+       y = "Share Population with High School Degree %") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        legend.position = "none")
+
 ui <- fluidPage(
   titlePanel("Exploring Societal Dynamics"),
-  tabsetPanel(
-    tabPanel("Introduction", 
-             fluidRow(
-               box("In this exploration of societal dynamics, we delve into the correlation between educational attainment and income inequality using the Gini Index and the share of the population with a high school degree. This analysis aims to uncover patterns and outliers that could shed light on the complex interplay between education and economic disparities in the United States.")
-             )
+  sidebarLayout(
+    sidebarPanel(
+      conditionalPanel(
+        condition = "input.tabselected == 'Median Income and Education'",
+        sliderInput("incomeRange", "Select Median Income Range",
+                    min = min(merged_df$median_household_income),
+                    max = max(merged_df$median_household_income),
+                    value = c(min(mer_df$median_household_income), max(mer_df$median_household_income)),
+                    step = 1000)
+      )
     ),
-    tabPanel("Story One", 
-             fluidRow(
-               title = "Main Findings",
-               "The visualization of the share of the population with a high school degree against the Gini Index reveals compelling patterns. Notably, three states—District of Columbia, New York, and Connecticut—form a distinctive triangle on the plot. District of Columbia stands out as a prominent outlier at the top, indicating higher income inequality. In contrast, New York is situated to the left, and Connecticut is positioned closer to the rest of the states but retains outlier status, notably in the bottom-right quadrant. This unique triangular arrangement emphasizes the heterogeneity in income distribution patterns, challenging a straightforward negative or positive correlation.",
-               "As we traverse the plot, the triangular formation signifies diverse socio-economic dynamics at play. The District of Columbia's elevated Gini Index suggests higher income inequality despite a significant share of high school graduates. In contrast, New York's leftward position and Connecticut's nuanced placement underscore the intricate relationships between education and income distribution. Exploring these nuanced positions can offer valuable insights into localized factors influencing economic equity."
-               
-             )
-    ),
-    tabPanel("Story Two", 
-             fluidRow(
-               column(6, plotlyOutput("median_vs_gini_plot")),
-               column(6, plotlyOutput("degree_vs_gini_plot")),
-               box(
-                 title = "Main Findings",
-                 HTML("In this exploration of societal dynamics, we delve into the correlation between educational attainment and income inequality using the Gini Index and the share of the population with a high school degree. This analysis aims to uncover patterns and outliers that could shed light on the complex interplay between education and economic disparities in the United States.
+    mainPanel(
+      tabsetPanel(
+        id = "tabselected",
+        tabPanel("Intro", 
+                 fluidRow(
+                   column(12, HTML('
+                 
+                 <p><strong>Overview:</strong></p>
+                 <p>Exploring the Dynamics of Income: Unveiling Interconnections with Education, Gini Index, and Hate Crimes</p>
+                 <p>Welcome to our journey through the intricate web of socioeconomic dynamics. In this project, we will delve into the relationships between median income, education, income disparity, and hate crimes. We aim to shed light on these issues and provide broader implications for society.</p>
+                 <br/>
+
+                 <!-- Add an image below the Overview -->
+                 <img src="http://peped.org/economicinvestigations/wp-content/uploads/sites/3/2016/06/US-Poverty.jpg" alt="homeless foo" style="width: 100%; max-width: 600px; margin-top: 10px;">
+                 
+                 <br/>
+
+                 <p><strong>Project Overview:</strong></p>
+                     <p><strong>Why This Analysis?</strong></p>
+                     <p>Understanding these relationships is crucial for comprehending the multifaceted dynamics that shape our communities. This analysis seeks to answer pivotal questions:</p>
+                     <p>- How does income impact educational opportunities?</p>
+                     <p>- What is the relationship between income inequality (as measured by the Gini index) and societal harmony or tension, as reflected in hate crime rates?</p>
+                     <p>These questions are not only academically intriguing but also hold practical significance for policymakers, social scientists, and individuals striving for a more equitable and harmonious society.</p>
+                     <br/>
+                     
+                     <p><strong>Dataset Source:</strong></p>
+                     <p>Our journey is fueled by data sourced from the reputable and insightful FiveThirtyEight, a hub for statistical analysis, opinion pieces, and engaging visualizations. The dataset we are using is a treasure trove of information, providing a comprehensive snapshot of income trends, educational metrics, Gini indices, and hate crime statistics. We will also be using a minimum wage dataset.</p>
+                     <p><a href="https://github.com/fivethirtyeight/data/blob/master/hate-crimes/hate_crimes.csv">Explore the dataset on GitHub</a></p>
+                     <br/>
+                     
+                     <p><strong>Join Us on This Analytical Odyssey:</strong></p>
+                     <p>As we navigate the labyrinth of data, we invite you to join us on this intellectual journey. Our findings could have far-reaching implications, shaping conversations around social justice, education reform, and economic policy.</p>
+                     <br/>
+                     
+                     <p>Ready to dive in? Let\'s embark on this analytical odyssey together!</p>
+                     <br/>
+                     
+                     <p><strong>Get Started with the Analysis</strong></p>
+'))
+                 )
+        ),
+        tabPanel("Median Income and Education",
+                 fluidRow(
+                   plotOutput("choroplethMap"),
+                   plotOutput("finalPlot"),
+                     HTML("
+  <h2>Unveiling the Data</h2>
+  <p>In our data analysis, we uncovered a robust and positive correlation across states between median income and the share of the population holding high school degrees. This insight allows us to observe the real-life implications of economic prosperity. Let's take a closer look.</p>
+
+  <h2>Main Findings</h2>
+  <p>Our statistics paint a vivid picture. States with higher median incomes consistently exhibit a greater proportion of residents with high school degrees. The data tells a tale of empowerment, where economic prosperity becomes a catalyst for broader educational achievements.</p>
+
+  <p>This bidirectional correlation may be self-enforcing, as wealthier states have more income to support people through their education, and in turn, may become wealthier due to the increased skill set of citizens. The correlation coefficient, standing tall with a positive sign, underscores a discovery which we all suspected but now with data supporting the claim.</p>
+
+  <h2>Conclusion</h2>
+  <p>Let's take a moment to see the scatter plot in a positive light. The strong positive correlation between median income and educational attainment emerges as a beacon of hope. It allows us to envision a future where education will lead to greater prosperity, illuminating the path toward a more equitable and enlightened society.</p>
+ ")
+                 )
+        ),
+        tabPanel("Gini Index vs Education and Income", 
+                 fluidRow(
+                   column(6, plotlyOutput("median_vs_gini_plot")),
+                   column(6, plotlyOutput("degree_vs_gini_plot")),
+                   box(
+                     title = "Main Findings",
+                     HTML("In this exploration of societal dynamics, we delve into the correlation between educational attainment and income inequality using the Gini Index and the share of the population with a high school degree. This analysis aims to uncover patterns and outliers that could shed light on the complex interplay between education and economic disparities in the United States.
                       <br><br>The visualization of the share of the population with a high school degree against the Gini Index reveals compelling patterns. Notably, three states—District of Columbia, New York, and Connecticut—form a distinctive triangle on the plot. District of Columbia stands out as a prominent outlier at the top, indicating higher income inequality. In contrast, New York is situated to the left, and Connecticut is positioned closer to the rest of the states but retains outlier status, notably in the bottom-right quadrant. This unique triangular arrangement emphasizes the heterogeneity in income distribution patterns, challenging a straightforward negative or positive correlation.
                       <br><br>As we traverse the plot, the triangular formation signifies diverse socio-economic dynamics at play. The District of Columbia's elevated Gini Index suggests higher income inequality despite a significant share of high school graduates. In contrast, New York's leftward position and Connecticut's nuanced placement underscore the intricate relationships between education and income distribution. Exploring these nuanced positions can offer valuable insights into localized factors influencing economic equity.")
-               )
-               
-             )
-    ),
-    tabPanel("Page 3", 
-             fluidRow(
-               box("Content for Page 2")
-             )
-    ),
-    tabPanel("Conclusions", 
-             fluidRow(
-               box("Conclusion:",
-                   "Our analytical journey through the socio-economic landscape of U.S. states has unearthed profound insights into the interplay of education, income, and hate crimes. In exploring the correlation between educational attainment and income levels, we discovered a consistent pattern — higher education levels are associated with elevated median household incomes. This foundational understanding serves as a springboard for deeper exploration, challenging conventional wisdom and setting the stage for a nuanced investigation into the mechanisms influencing economic equity.
-The Gini Index, a measure of income inequality, revealed a captivating triangular pattern. District of Columbia emerged as a prominent outlier at the top, indicating higher income inequality. Meanwhile, New York positioned to the left, and Connecticut, though closer to the rest, retained outlier status in the bottom-right quadrant. This complex arrangement challenges simplistic correlations, emphasizing the need for a more nuanced approach to understanding income distribution patterns.
-In our examination of hate crimes and demographics, a correlation emerged between higher percentages of urban populations and elevated rates of reported hate crimes. However, outliers like Washington, Oregon, and the District of Columbia added a layer of complexity, our data suggest a potential relationship between education and hate crimes. The findings invite a closer look into the societal intricacies shaping these statistics, underlining the necessity of navigating unexpected twists and turns for a comprehensive understanding of the socio-economic landscape.
-Hate crimes and demographics introduced a nuanced correlation. While urban populations showcased higher hate crime rates, outliers like Washington, Oregon, and the District of Columbia hinted at an unexpected relationship between education and hate crimes. This revelation beckons us to unravel the societal intricacies shaping these statistics, steering conversations toward more inclusive policies and a deeper understanding of state-specific dynamics
-Our journey is fueled by data sourced by a hub for statistical analysis, opinion pieces, and engaging visualizations. The dataset we're using is a comprehensive snapshot of income trends, educational metrics, Gini indices, and hate crime statistics.
-.")
-             )
-    )
-  )
+                     
+                   )
+                 )
+        ),
+        
+        tabPanel("Hate Crimes and Demographics", 
+                 fluidRow(
+                   column(6, plotlyOutput("education_hate_plot")),
+                   column(6, plotlyOutput("pop_hate_plot")),
+                   column(6, plotlyOutput("pop_higschool_degree_plot")),
+                   box(
+                     title = "Intro",
+                     HTML("In the state demographics and hate crime statistics, a curious connection emerges when we focus on the percentage of high school graduates. The scatter plot showcases a gradual but noticeable uptick: states with a higher share of high school degree holders seem to exhibit an unexpected increase in hate crime rates per 100,000 people.
+                      This revelation sparks a cascade of questions. Why does a higher level of education appear to correlate with a marginal rise in hate crimes? The plot, with each state as a distinct point, paints a story that challenges conventional wisdom. The data suggests that the relationship between education and hate crimes might be more nuanced than anticipated.<br><br>Main findings: <br><br>The analysis of the relationship between the share of the population in metropolitan areas and hate crimes reveals intriguing insights, particularly when considering the correlation with education levels across states, especially those in urban areas. States such as Washington, Oregon, and the District of Columbia emerge as outliers, consistently occupying similar positions in both the share population in metro areas and hate crimes graphs.
+                      The scatter plot comparing the share of the population in metropolitan areas to hate crimes per 100,000 people demonstrates a notable correlation. States with higher percentages of urban populations tend to exhibit higher rates of hate crimes. This positive correlation implies that, in general, states with larger metropolitan populations experience elevated levels of reported hate crimes.
+                      The correlation observed in the analysis becomes more nuanced when education levels are considered. The states identified as outliers in both graphs (Washington, Oregon, and the District of Columbia) suggest a potential relationship between education and hate crimes. It implies that in states with higher shares of the population in metropolitan areas, the educational landscape may play a role in influencing hate crime rates.
+                      Try to find the way it is that way or why do you see this
+                      Conclusion<br><br>As we navigate the scattered points on the graph, it becomes clear that this correlation demands a closer look. Could it be that factors beyond education contribute to the complex landscape of hate crimes? The plot invites us to delve deeper into the societal intricacies that shape these statistics, reminding us that uncovering the truth often involves navigating unexpected twists and turns")
+                   )
+                 )
+        ),
+        
+        
+        tabPanel("Conclusions", 
+                 fluidRow(
+                   box("Conclusion:",
+                       "Our analytical journey through the socio-economic landscape of U.S. states has unearthed profound insights into the interplay of education, income, and hate crimes. In exploring the correlation between educational attainment and income levels, we discovered a consistent pattern — higher education levels are associated with elevated median household incomes. This foundational understanding serves as a springboard for deeper exploration, challenging conventional wisdom and setting the stage for a nuanced investigation into the mechanisms influencing economic equity.",
+                       "The Gini Index, a measure of income inequality, revealed a captivating triangular pattern. District of Columbia emerged as a prominent outlier at the top, indicating higher income inequality. Meanwhile, New York positioned to the left, and Connecticut, though closer to the rest, retained outlier status in the bottom-right quadrant. This complex arrangement challenges simplistic correlations, emphasizing the need for a more nuanced approach to understanding income distribution patterns.",
+                       "In our examination of hate crimes and demographics, a correlation emerged between higher percentages of urban populations and elevated rates of reported hate crimes. However, outliers like Washington, Oregon, and the District of Columbia added a layer of complexity, our data suggest a potential relationship between education and hate crimes. The findings invite a closer look into the societal intricacies shaping these statistics, underlining the necessity of navigating unexpected twists and turns for a comprehensive understanding of the socio-economic landscape.",
+                       "Hate crimes and demographics introduced a nuanced correlation. While urban populations showcased higher hate crime rates, outliers like Washington, Oregon, and the District of Columbia hinted at an unexpected relationship between education and hate crimes. This revelation beckons us to unravel the societal intricacies shaping these statistics, steering conversations toward more inclusive policies and a deeper understanding of state-specific dynamics",
+                       "Our journey is fueled by data sourced by a hub for statistical analysis, opinion pieces, and engaging visualizations. The dataset we're using is a comprehensive snapshot of income trends, educational metrics, Gini indices, and hate crime statistics."
+                   )
+                 )
+        )
+      )
+    ))
 )
 
-# Define server
 server <- function(input, output, session) {
+  # Reactive expression for filtering data based on income range
+  filtered_data <- reactive({
+    subset(merged_data, value >= input$incomeRange[1] & value <= input$incomeRange[2])
+  })
   
-  # Render the ggplot figures in the "story two" tab
+  # Render the choropleth map
+  output$choroplethMap <- renderPlot({
+    ggplot(filtered_data(), aes_string(x = "long", y = "lat", group = "group", fill = "value")) +
+      labs(title = "Median Household Income Across States")+
+      xlab("") +
+      ylab("") +
+      geom_polygon(color = "white") +
+      coord_map() +
+      scale_fill_gradient(name = "Median Household Income", low = "lightblue", high = "darkblue") +
+      theme_minimal() +
+      theme(legend.position = "right")
+  })
+  
+  # Render the final plot
+  output$finalPlot <- renderPlot({
+    final_plot
+  })
+  
   output$plot_output <- renderUI({
     fluidRow(
       column(6, plotlyOutput("median_vs_gini_plot")),
@@ -76,9 +178,9 @@ server <- function(input, output, session) {
     )
   })
   
-  # Render the plotly figures
+  # Render the plotly figures for Story Two
   output$median_vs_gini_plot <- renderPlotly({
-    gg <- ggplot(merged_df, aes(x = median_household_income, y = gini_index, label = state_abbr)) +
+    gg <- ggplot(mer_df, aes(x = median_household_income, y = gini_index, label = state_abbr)) +
       geom_point(color = "darkblue", size = 2, alpha = 0.7) +
       geom_text(vjust = -0.5, hjust = 1, size = 3, color = "black") +
       labs(title = "Median House Hold Income vs. Gini Index",
@@ -88,22 +190,68 @@ server <- function(input, output, session) {
   })
   
   output$degree_vs_gini_plot <- renderPlotly({
-    gg <- ggplot(merged_df, aes(x = share_population_with_high_school_degree, y = gini_index, label = state_abbr)) +
+    gg <- ggplot(mer_df, aes(x = share_population_with_high_school_degree, y = gini_index, label = state_abbr)) +
       geom_point(color = "darkblue", size = 2, alpha = 0.7) +
-      geom_text(vjust = -0.5, hjust = 1, size = 3, color = "black") +
+      geom_text(vjust = --0.5, hjust = 1, size = 3, color = "black") +
       labs(title = "Share of Population with High School Degree vs. Gini Index",
            x = "Share Population with High School Degree",
            y = "Gini Index")
     ggplotly(gg)
   })
   
-  # Render the findings text
-  #output$findings_text <- renderPrint({
-   # cat("Findings:\n")
-    #cat("The visualization of the share of the population with a high school degree against the Gini Index reveals compelling patterns. Notably, three states—District of Columbia, New York, and Connecticut—form a distinctive triangle on the plot. District of Columbia stands out as a prominent outlier at the top, indicating higher income inequality. In contrast, New York is situated to the left, and Connecticut is positioned closer to the rest of the states but retains outlier status, notably in the bottom-right quadrant. This unique triangular arrangement emphasizes the heterogeneity in income distribution patterns, challenging a straightforward negative or positive correlation.\n\n")
-    #cat("As we traverse the plot, the triangular formation signifies diverse socio-economic dynamics at play. The District of Columbia's elevated Gini Index suggests higher income inequality despite a significant share of high school graduates. In contrast, New York's leftward position and Connecticut's nuanced placement underscore the intricate relationships between education and income distribution. Exploring these nuanced positions can offer valuable insights into localized factors influencing economic equity.\n")
-  #})
+  output$findings_text_story_three <- renderText({
+    "Intro:
+<br><br>In the state demographics and hate crime statistics, a curious connection emerges when we focus on the percentage of high school graduates. The scatter plot showcases a gradual but noticeable uptick: states with a higher share of high school degree holders seem to exhibit an unexpected increase in hate crime rates per 100,000 people.
+This revelation sparks a cascade of questions. Why does a higher level of education appear to correlate with a marginal rise in hate crimes? The plot, with each state as a distinct point, paints a story that challenges conventional wisdom. The data suggests that the relationship between education and hate crimes might be more nuanced than anticipated.
+<br><br>Main findings: 
+<br><br>The analysis of the relationship between the share of the population in metropolitan areas and hate crimes reveals intriguing insights, particularly when considering the correlation with education levels across states, especially those in urban areas. States such as Washington, Oregon, and the District of Columbia emerge as outliers, consistently occupying similar positions in both the share population in metro areas and hate crimes graphs.
+The scatter plot comparing the share of the population in metropolitan areas to hate crimes per 100,000 people demonstrates a notable correlation. States with higher percentages of urban populations tend to exhibit higher rates of hate crimes. This positive correlation implies that, in general, states with larger metropolitan populations experience elevated levels of reported hate crimes.
+The correlation observed in the analysis becomes more nuanced when education levels are considered. The states identified as outliers in both graphs (Washington, Oregon, and the District of Columbia) suggest a potential relationship between education and hate crimes. It implies that in states with higher shares of the population in metropolitan areas, the educational landscape may play a role in influencing hate crime rates.
+Try to find the way it is that way or why do you see this
+Conclusion 
+<br><br>As we navigate the scattered points on the graph, it becomes clear that this correlation demands a closer look. Could it be that factors beyond education contribute to the complex landscape of hate crimes? The plot invites us to delve deeper into the societal intricacies that shape these statistics, reminding us that uncovering the truth often involves navigating unexpected twists and turns
+"})
+  # Render the findings text for Story Two
+  output$findings_text <- renderText({
+    "The visualization of the share of the population with a high school degree against the Gini Index reveals compelling patterns. Notably, three states—District of Columbia, New York, and Connecticut—form a distinctive triangle on the plot. District of Columbia stands out as a prominent outlier at the top, indicating higher income inequality. In contrast, New York is situated to the left, and Connecticut is positioned closer to the rest of the states but retains outlier status, notably in the bottom-right quadrant. This unique triangular arrangement emphasizes the heterogeneity in income distribution patterns, challenging a straightforward negative or positive correlation.\n\n"
+    "As we traverse the plot, the triangular formation signifies diverse socio-economic dynamics at play. The District of Columbia's elevated Gini Index suggests higher income inequality despite a significant share of high school graduates. In contrast, New York's leftward position and Connecticut's nuanced placement underscore the intricate relationships between education and income distribution. Exploring these nuanced positions can offer valuable insights into localized factors influencing economic equity.\n"
+  })
+  
+  # Render the plotly figures for Page 3
+  output$education_hate_plot <- renderPlotly({
+    gg <- ggplot(mer_df, aes(x = share_population_with_high_school_degree, y = hate_crimes_per_100k_splc, label = state_abbr)) +
+      geom_point(color = "darkred", size = 2, alpha = 0.7) +
+      geom_text(check_overlap = TRUE, vjust = -0.5, hjust = 1, size = 3, color = "black") +
+      labs(title = "Scatter Plot: Education Level vs. Hate Crimes",
+           x = "Share Population with High School Degree",
+           y = "Hate Crimes per 100k (SPLC)")
+    ggplotly(gg)
+  })
+  
+  output$pop_hate_plot <- renderPlotly({
+    gg <- ggplot(mer_df, aes(x = share_population_in_metro_areas, y = hate_crimes_per_100k_splc, label = state_abbr)) +
+      geom_point(color = "darkred", size = 2, alpha = 0.7) +
+      geom_text(vjust = -0.5, hjust = 1, size = 3, color = "black") +
+      labs(title = "Share Population in Metro Areas vs. Hate Crimes",
+           x = "Share Population in Metro Areas",
+           y = "Hate Crimes per 100k (SPLC)")
+    ggplotly(gg)
+  })
+  
+  output$pop_higschool_degree_plot <- renderPlotly({
+    gg <- ggplot(mer_df, aes(x = share_population_in_metro_areas, y = share_population_with_high_school_degree, label = state_abbr)) +
+      geom_point(color = "darkred", size = 2, alpha = 0.7) +
+      geom_text(vjust = -0.5, hjust = 1, size = 3, color = "black") +
+      labs(title = "Share Population in Metro Areas vs. Share Population with High School Degree",
+           x = "Share Population in Metro Areas",
+           y = "Share Population with High School Degree")
+    ggplotly(gg)
+  })
 }
+
+
 
 # Run the application
 shinyApp(ui, server)
+
+
