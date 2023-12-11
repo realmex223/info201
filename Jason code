@@ -1,0 +1,109 @@
+# Run the application
+shinyApp(ui, server)
+library(shiny)
+library(shinydashboard)
+library(plotly)
+source("github1.R")
+
+
+
+# Sample data (replace this with your actual data)
+merged_df <- data.frame(
+  state_abbr = state.abb,
+  median_household_income = rnorm(50, mean = 50000, sd = 10000),
+  gini_index = rnorm(50, mean = 0.4, sd = 0.1),
+  share_population_with_high_school_degree = runif(50, min = 60, max = 90)
+)
+
+# Define UI
+ui <- fluidPage(
+  titlePanel("Exploring Societal Dynamics"),
+  tabsetPanel(
+    tabPanel("Introduction", 
+             fluidRow(
+               box("In this exploration of societal dynamics, we delve into the correlation between educational attainment and income inequality using the Gini Index and the share of the population with a high school degree. This analysis aims to uncover patterns and outliers that could shed light on the complex interplay between education and economic disparities in the United States.")
+             )
+    ),
+    tabPanel("Story One", 
+             fluidRow(
+               title = "Main Findings",
+               "The visualization of the share of the population with a high school degree against the Gini Index reveals compelling patterns. Notably, three states—District of Columbia, New York, and Connecticut—form a distinctive triangle on the plot. District of Columbia stands out as a prominent outlier at the top, indicating higher income inequality. In contrast, New York is situated to the left, and Connecticut is positioned closer to the rest of the states but retains outlier status, notably in the bottom-right quadrant. This unique triangular arrangement emphasizes the heterogeneity in income distribution patterns, challenging a straightforward negative or positive correlation.",
+               "As we traverse the plot, the triangular formation signifies diverse socio-economic dynamics at play. The District of Columbia's elevated Gini Index suggests higher income inequality despite a significant share of high school graduates. In contrast, New York's leftward position and Connecticut's nuanced placement underscore the intricate relationships between education and income distribution. Exploring these nuanced positions can offer valuable insights into localized factors influencing economic equity."
+               
+             )
+    ),
+    tabPanel("Story Two", 
+             fluidRow(
+               column(6, plotlyOutput("median_vs_gini_plot")),
+               column(6, plotlyOutput("degree_vs_gini_plot")),
+               box(
+                 title = "Main Findings",
+                 HTML("In this exploration of societal dynamics, we delve into the correlation between educational attainment and income inequality using the Gini Index and the share of the population with a high school degree. This analysis aims to uncover patterns and outliers that could shed light on the complex interplay between education and economic disparities in the United States.
+                      <br><br>The visualization of the share of the population with a high school degree against the Gini Index reveals compelling patterns. Notably, three states—District of Columbia, New York, and Connecticut—form a distinctive triangle on the plot. District of Columbia stands out as a prominent outlier at the top, indicating higher income inequality. In contrast, New York is situated to the left, and Connecticut is positioned closer to the rest of the states but retains outlier status, notably in the bottom-right quadrant. This unique triangular arrangement emphasizes the heterogeneity in income distribution patterns, challenging a straightforward negative or positive correlation.
+                      <br><br>As we traverse the plot, the triangular formation signifies diverse socio-economic dynamics at play. The District of Columbia's elevated Gini Index suggests higher income inequality despite a significant share of high school graduates. In contrast, New York's leftward position and Connecticut's nuanced placement underscore the intricate relationships between education and income distribution. Exploring these nuanced positions can offer valuable insights into localized factors influencing economic equity.")
+               )
+               
+             )
+    ),
+    tabPanel("Page 3", 
+             fluidRow(
+               box("Content for Page 2")
+             )
+    ),
+    tabPanel("Conclusions", 
+             fluidRow(
+               box("Conclusion:",
+                   "Our analytical journey through the socio-economic landscape of U.S. states has unearthed profound insights into the interplay of education, income, and hate crimes. In exploring the correlation between educational attainment and income levels, we discovered a consistent pattern — higher education levels are associated with elevated median household incomes. This foundational understanding serves as a springboard for deeper exploration, challenging conventional wisdom and setting the stage for a nuanced investigation into the mechanisms influencing economic equity.
+The Gini Index, a measure of income inequality, revealed a captivating triangular pattern. District of Columbia emerged as a prominent outlier at the top, indicating higher income inequality. Meanwhile, New York positioned to the left, and Connecticut, though closer to the rest, retained outlier status in the bottom-right quadrant. This complex arrangement challenges simplistic correlations, emphasizing the need for a more nuanced approach to understanding income distribution patterns.
+In our examination of hate crimes and demographics, a correlation emerged between higher percentages of urban populations and elevated rates of reported hate crimes. However, outliers like Washington, Oregon, and the District of Columbia added a layer of complexity, our data suggest a potential relationship between education and hate crimes. The findings invite a closer look into the societal intricacies shaping these statistics, underlining the necessity of navigating unexpected twists and turns for a comprehensive understanding of the socio-economic landscape.
+Hate crimes and demographics introduced a nuanced correlation. While urban populations showcased higher hate crime rates, outliers like Washington, Oregon, and the District of Columbia hinted at an unexpected relationship between education and hate crimes. This revelation beckons us to unravel the societal intricacies shaping these statistics, steering conversations toward more inclusive policies and a deeper understanding of state-specific dynamics
+Our journey is fueled by data sourced by a hub for statistical analysis, opinion pieces, and engaging visualizations. The dataset we're using is a comprehensive snapshot of income trends, educational metrics, Gini indices, and hate crime statistics.
+.")
+             )
+    )
+  )
+)
+
+# Define server
+server <- function(input, output, session) {
+  
+  # Render the ggplot figures in the "story two" tab
+  output$plot_output <- renderUI({
+    fluidRow(
+      column(6, plotlyOutput("median_vs_gini_plot")),
+      column(6, plotlyOutput("degree_vs_gini_plot")),
+      verbatimTextOutput("findings_text")
+    )
+  })
+  
+  # Render the plotly figures
+  output$median_vs_gini_plot <- renderPlotly({
+    gg <- ggplot(merged_df, aes(x = median_household_income, y = gini_index, label = state_abbr)) +
+      geom_point(color = "darkblue", size = 2, alpha = 0.7) +
+      geom_text(vjust = -0.5, hjust = 1, size = 3, color = "black") +
+      labs(title = "Median House Hold Income vs. Gini Index",
+           x = "Median Household Income",
+           y = "Gini Index")
+    ggplotly(gg)
+  })
+  
+  output$degree_vs_gini_plot <- renderPlotly({
+    gg <- ggplot(merged_df, aes(x = share_population_with_high_school_degree, y = gini_index, label = state_abbr)) +
+      geom_point(color = "darkblue", size = 2, alpha = 0.7) +
+      geom_text(vjust = -0.5, hjust = 1, size = 3, color = "black") +
+      labs(title = "Share of Population with High School Degree vs. Gini Index",
+           x = "Share Population with High School Degree",
+           y = "Gini Index")
+    ggplotly(gg)
+  })
+  
+  # Render the findings text
+  #output$findings_text <- renderPrint({
+   # cat("Findings:\n")
+    #cat("The visualization of the share of the population with a high school degree against the Gini Index reveals compelling patterns. Notably, three states—District of Columbia, New York, and Connecticut—form a distinctive triangle on the plot. District of Columbia stands out as a prominent outlier at the top, indicating higher income inequality. In contrast, New York is situated to the left, and Connecticut is positioned closer to the rest of the states but retains outlier status, notably in the bottom-right quadrant. This unique triangular arrangement emphasizes the heterogeneity in income distribution patterns, challenging a straightforward negative or positive correlation.\n\n")
+    #cat("As we traverse the plot, the triangular formation signifies diverse socio-economic dynamics at play. The District of Columbia's elevated Gini Index suggests higher income inequality despite a significant share of high school graduates. In contrast, New York's leftward position and Connecticut's nuanced placement underscore the intricate relationships between education and income distribution. Exploring these nuanced positions can offer valuable insights into localized factors influencing economic equity.\n")
+  #})
+}
+
+# Run the application
+shinyApp(ui, server)
